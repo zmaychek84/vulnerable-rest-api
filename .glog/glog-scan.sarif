@@ -10,7 +10,594 @@
           "version": "1.0.0",
           "semanticVersion": "1.0.0",
           "informationUri": "https://www.glog.ai",
-          "rules": [],
+          "rules": [
+            {
+              "id": "b4517929-7da1-36fe-87b7-9bc6b65f6d74",
+              "name": "\"Missing CSRF Middleware in Express Application\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Request Forgery (CSRF) is an attack that tricks the victim into submitting a malicious request. It uses the identity and privileges of the victim to perform an undesired function on their behalf. In an Express application, if CSRF middleware is not implemented, it leaves the application vulnerable to CSRF attacks.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should use CSRF protection middleware such as `csurf`. This middleware creates a CSRF token that is added to forms and AJAX requests. When the form is submitted or the AJAX request is made, `csurf` will ensure that the CSRF token is included and is correct.\n\n## Source Code Fix Recommendation\n\nFirst, install the `csurf` middleware:\n\n```bash\nnpm install csurf\n```\n\nThen, use it in your Express application:\n\n```javascript\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst csrf = require('csurf');\n\nconst csrfProtection = csrf({ cookie: true });\n\nconst appDev = express();\nappDev.use(cookieParser());\n\nappDev.use(csrfProtection);\nappDev.use(function(req, res, next) {\n  res.locals._csrf = req.csrfToken();\n  next();\n});\n```\n\nIn this code, `cookie-parser` is used to read cookies, which is where the CSRF token will be stored. The `csrfProtection` middleware is applied to every route, and the CSRF token is added to `res.locals` so it can be accessed in views.\n\n## Library Dependencies\n\n- express\n- cookie-parser\n- csurf\n\n## References\n\n- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)\n- [CWE-352: Cross-Site Request Forgery (CSRF)](https://cwe.mitre.org/data/definitions/352.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-352",
+                    "url": "https://cwe.mitre.org/data/definitions/352.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-352"
+                ]
+              }
+            },
+            {
+              "id": "979a782a-6de6-36e1-8af1-e1beefa50d27",
+              "name": "\"Undetected CSRF Middleware in Your Express Application\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Request Forgery (CSRF) is a type of attack that occurs when a malicious web site, email, blog, instant message, or program causes a user's web browser to perform an unwanted action on a trusted site for which the user is currently authenticated. If the application does not have CSRF protection middleware, it is vulnerable to this type of attack.\n\nIn the context of Express.js, if the application does not use any CSRF protection middleware, it is vulnerable to CSRF attacks. This is because Express.js does not include CSRF protection in its core, and it must be added manually.\n\n## Mitigation\n\nTo mitigate CSRF attacks, you should use CSRF protection middleware. One of the most popular CSRF protection middleware for Express.js is `csurf`. This middleware creates a CSRF token that must be included in every state-changing request. If the CSRF token is not included or is incorrect, the request will be rejected.\n\n## Code Fix\n\nFirst, install the `csurf` middleware:\n\n```bash\nnpm install csurf\n```\n\nThen, use it in your Express.js application:\n\n```javascript\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst csrf = require('csurf');\n\nconst csrfProtection = csrf({ cookie: true });\n\nconst app = express();\napp.use(cookieParser());\n\napp.get('/form', csrfProtection, (req, res) => {\n  // pass the csrfToken to the view\n  res.render('send', { csrfToken: req.csrfToken() });\n});\n\napp.post('/process', csrfProtection, (req, res) => {\n  // process the request\n});\n```\n\nIn this example, the `csrfProtection` middleware is used in routes that render forms and process form submissions. The CSRF token is passed to the view when rendering forms, and it is checked when processing form submissions.\n\n## Dependencies\n\n- express\n- csurf\n- cookie-parser\n\n## References\n\n- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)\n- [CWE-352: Cross-Site Request Forgery (CSRF)](https://cwe.mitre.org/data/definitions/352.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-352",
+                    "url": "https://cwe.mitre.org/data/definitions/352.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-352"
+                ]
+              }
+            },
+            {
+              "id": "1736b4b2-27a1-3781-a71d-bf219e7c3cfb",
+              "name": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when data enters a web application through an untrusted source, in this case, the user input, and is used to write directly to a response object without proper validation or encoding. This vulnerability can allow an attacker to inject malicious scripts into web pages viewed by other users. These scripts can steal sensitive data from users, perform actions on their behalf, or even take over their accounts.\n\nIn the provided JavaScript code, the `res.send(author)` statement is vulnerable to XSS attacks because it directly writes the user input (`author`) to the response object without any sanitization or encoding.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always validate and sanitize user inputs. You should also encode the output before writing it to the response object. This will ensure that any malicious scripts injected by the attacker are not executed.\n\n## Source Code Fix Recommendation\n\nYou can use the `escape-html` library to encode the user input before writing it to the response object. Here is how you can fix the vulnerability:\n\n```javascript\nvar escape = require('escape-html');\n\n// ...\n\nres.send(escape(author));\n```\n\n## Library Dependencies\n\nThe `escape-html` library is required by the code example to execute properly.\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "b929b2fb-6bb7-3248-b9a3-25d5dd534f06",
+              "name": "Bcrypt Hash Vulnerability Detected",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe \"Bcrypt Hash Vulnerability Detected\" vulnerability in JavaScript refers to the situation where a weak or default bcrypt hash is used for password hashing. Bcrypt is a password hashing function designed by Niels Provos and David Mazières, based on the Blowfish cipher. The bcrypt function is the default password hash algorithm for BSD and other systems. The prefix \"$2b$\" (or \"2y\") in a hash string in a shadow password file indicates that hash string is a bcrypt hash in modular crypt format.\n\nThe vulnerability arises when the bcrypt hash is not strong enough (i.e., the cost factor is too low) or when a default hash is used, which can be easily cracked by attackers.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to:\n\n1. Use a strong bcrypt hash with a high cost factor. The cost factor is the logarithmic iteration count used in the bcrypt hash algorithm. The higher the cost factor, the more secure the hash, but also the more processing power required to validate passwords against it.\n\n2. Avoid using default bcrypt hashes. Always generate a new bcrypt hash for each user password.\n\n3. Regularly update and rehash user passwords.\n\n## Source Code Fix Recommendation\n\nThe following is a JavaScript code example using the `bcrypt` library to generate a strong bcrypt hash:\n\n```javascript\nconst bcrypt = require('bcrypt');\nconst saltRounds = 12; // Increase the cost factor to 12\n\nbcrypt.hash('myPassword', saltRounds, function(err, hash) {\n  // Store hash in your password DB.\n});\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n- bcrypt: A library to help you hash passwords.\n\n## References\n\n- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)\n- [CWE-916: Use of Password Hash With Insufficient Computational Effort](https://cwe.mitre.org/data/definitions/916.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-916",
+                    "url": "https://cwe.mitre.org/data/definitions/916.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-916"
+                ]
+              }
+            },
+            {
+              "id": "50de0c4a-ce50-3a44-93b0-a9a17b26ca93",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of React, using `React.createRef()` can potentially lead to XSS vulnerabilities if the `ref` is improperly handled. This is because `ref` provides a way to access the properties of a DOM node directly, and if an attacker can control the value of `ref`, they can potentially inject malicious scripts.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using user-controlled input within your `ref` attributes. If this is not possible, you should properly sanitize and validate all user input to ensure it does not contain any malicious scripts.\n\n## Source Code Fix Recommendation\n\nInstead of using `React.createRef()`, consider using callback refs. Callback refs give more fine-grain control over the values, which can help prevent potential XSS attacks.\n\n```javascript\n// Before\nnotificationSystem = React.createRef();\n\n// After\nnotificationSystem = (element) => {\n  this.notificationSystem = element;\n};\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "541ab5e1-7efc-39c7-b4e3-3f03c78d7961",
+              "name": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability; Use 'resp.render()' for Safe HTML Escaping",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of JavaScript programming, directly writing to the response object from user input may lead to XSS vulnerability. This is because the `res.send()` function in Express.js sends the HTTP response and does not escape HTML characters. If the data passed to `res.send()` includes user input, it may include malicious scripts, leading to XSS attacks.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always escape user input that is included in a web page. This can be done by using context-specific escaping functions or by using a templating engine that automatically escapes user input.\n\nIn Express.js, you can use the `resp.render()` function to send the HTTP response. The `resp.render()` function renders a view and sends the rendered HTML string to the client. If you are using a templating engine like EJS or Pug, it will automatically escape user input.\n\n## Source Code Fix Recommendation\n\nInstead of:\n\n```javascript\nres.send(book);\n```\n\nUse:\n\n```javascript\nres.render('book', { book: book });\n```\n\nIn this example, 'book' is the name of the view and `{ book: book }` is the data passed to the view. The view should be a file in the views directory and should use the syntax of the templating engine to include the data in the HTML.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- express: A web application framework for Node.js.\n- ejs or pug: A templating engine for Node.js.\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "bec164a1-1bdf-3733-a505-ccfe571c5cd1",
+              "name": "\"Avoid Spreading JSX Attributes to Prevent Unintentional Prop Passing and Invalid HTML Warnings\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nIn JavaScript, particularly when using libraries like React, developers often use the spread operator (`...`) to pass props (properties) to a component. This is a convenient way to pass multiple props at once, but it can also lead to unintentional prop passing and invalid HTML prop warnings. This happens when extra, unintended props are included in the object being spread, which can lead to unexpected behavior in the component or warnings from React about invalid HTML props.\n\n## Mitigation Advice\n\nTo mitigate this issue, it's recommended to explicitly pass only the props that a component needs, rather than using the spread operator to pass an entire object. This ensures that only the intended props are passed, and can help prevent unexpected behavior or warnings.\n\n## Source Code Fix Recommendation\n\nIn the provided code example, the `Books` component is being passed all the props from the `Route` component, as well as an additional `user` prop. To fix this, you could explicitly pass only the props that the `Books` component needs. For example:\n\n```jsx\n<Route path=\"/books\" exact render={props => <Books match={props.match} location={props.location} history={props.history} user={this.state.user} />}/>\n```\n\nIn this example, only the `match`, `location`, and `history` props are passed to the `Books` component, along with the `user` prop. This ensures that no extra, unintended props are passed.\n\n## Library Dependencies\n\nThe provided code example requires the following library dependencies:\n\n- `react`\n- `react-router-dom`\n\n## OWASP and CWE Resources\n\n- [OWASP Top 10](https://owasp.org/www-project-top-ten/)\n- [CWE for Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)\n\nPlease note that while this issue can potentially lead to unexpected behavior in a React application, it's not directly related to a specific OWASP Top 10 or CWE vulnerability. However, it's always a good practice to follow secure coding principles and avoid potential issues like this one."
+              },
+              "properties": {
+                "cwe": [],
+                "severity": "MEDIUM",
+                "kind": "FAIL"
+              }
+            },
+            {
+              "id": "480c84b3-1aea-33a9-83f3-ecc3f52dc9ec",
+              "name": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability; Use 'resp.render()' for Safe HTML Escaping",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of JavaScript programming, directly writing to the response object from user input may lead to XSS vulnerability. This is because the `res.send()` function in Express.js sends the HTTP response and does not escape HTML characters. If the data passed to `res.send()` includes user input, it may include malicious scripts, leading to XSS attacks.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always escape user input that is included in a web page. This can be done by using context-specific escaping functions or by using a templating engine that automatically escapes user input.\n\nIn Express.js, you can use the `resp.render()` function to send the HTTP response. The `resp.render()` function renders a view and sends the rendered HTML string to the client. If you are using a templating engine like EJS or Pug, it will automatically escape user input.\n\n## Source Code Fix Recommendation\n\nInstead of:\n\n```javascript\nres.send(book);\n```\n\nUse:\n\n```javascript\nres.render('book', { book: book });\n```\n\nIn this example, 'book' is the name of the view and `{ book: book }` is the data passed to the view. The view should be a file in the views directory and should use the syntax of the templating engine to include the data in the HTML.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- express: A web application framework for Node.js.\n- ejs or pug: A templating engine for Node.js.\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "7f366b51-0f8b-31b5-85f8-f2eb61e85fde",
+              "name": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when data enters a web application through an untrusted source, in this case, the user input, and is used to write directly to a response object without proper validation or encoding. This vulnerability can allow an attacker to inject malicious scripts into web pages viewed by other users. These scripts can steal sensitive data from users, perform actions on their behalf, or even take over their accounts.\n\nIn the provided JavaScript code, the `res.send(author)` statement is vulnerable to XSS attacks because it directly writes the user input (`author`) to the response object without any sanitization or encoding.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always validate and sanitize user inputs. You should also encode the output before writing it to the response object. This will ensure that any malicious scripts injected by the attacker are not executed.\n\n## Source Code Fix Recommendation\n\nYou can use the `escape-html` library to encode the user input before writing it to the response object. Here is how you can fix the vulnerability:\n\n```javascript\nvar escape = require('escape-html');\n\n// ...\n\nres.send(escape(author));\n```\n\n## Library Dependencies\n\nThe `escape-html` library is required by the code example to execute properly.\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "ed836ef6-5b3a-3093-870f-c817cf9fa42b",
+              "name": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability; Use 'resp.render()' for Safe HTML Escaping",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of JavaScript programming, directly writing to the response object from user input may lead to XSS vulnerability. This is because the `res.send()` function in Express.js sends the HTTP response and does not escape HTML characters. If the data passed to `res.send()` includes user input, it may include malicious scripts, leading to XSS attacks.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always escape user input that is included in a web page. This can be done by using context-specific escaping functions or by using a templating engine that automatically escapes user input.\n\nIn Express.js, you can use the `resp.render()` function to send the HTTP response. The `resp.render()` function renders a view and sends the rendered HTML string to the client. If you are using a templating engine like EJS or Pug, it will automatically escape user input.\n\n## Source Code Fix Recommendation\n\nInstead of:\n\n```javascript\nres.send(book);\n```\n\nUse:\n\n```javascript\nres.render('book', { book: book });\n```\n\nIn this example, 'book' is the name of the view and `{ book: book }` is the data passed to the view. The view should be a file in the views directory and should use the syntax of the templating engine to include the data in the HTML.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- express: A web application framework for Node.js.\n- ejs or pug: A templating engine for Node.js.\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "a7dfeb7d-ce6e-3faa-8f10-06a20981671a",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of React, using `React.createRef()` can potentially lead to XSS vulnerabilities if the `ref` is improperly handled. This is because `ref` provides a way to access the properties of a DOM node directly, and if an attacker can control the value of `ref`, they can potentially inject malicious scripts.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using user-controlled input within your `ref` attributes. If this is not possible, you should properly sanitize and validate all user input to ensure it does not contain any malicious scripts.\n\n## Source Code Fix Recommendation\n\nInstead of using `React.createRef()`, consider using callback refs. Callback refs give more fine-grain control over the values, which can help prevent potential XSS attacks.\n\n```javascript\n// Before\nnotificationSystem = React.createRef();\n\n// After\nnotificationSystem = (element) => {\n  this.notificationSystem = element;\n};\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "d2a29cb0-2ef9-31ed-b161-dca57fb84f94",
+              "name": "\"HTML Coding Risks XSS Attack Exposure\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe code snippet provided is vulnerable to Cross-Site Scripting (XSS) attacks. XSS is a type of injection security vulnerability where an attacker can inject malicious scripts into webpages viewed by other users. In this case, the `dangerouslySetInnerHTML` function in React is being used to directly insert user input (`this.state.result`) into the webpage's HTML. If `this.state.result` contains a malicious script, it will be executed when the page is loaded.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using `dangerouslySetInnerHTML` whenever possible. Instead, use React's built-in JSX syntax to set the content of elements. JSX automatically escapes all variable content, so you don't have to worry about XSS attacks.\n\n## Source Code Fix Recommendation\n\nHere's how you can fix the vulnerability in the provided code:\n\n```jsx\n<p className='lead'>Thank you {this.state.result} for subscribing!</p>\n```\n\nIn this fixed code, `this.state.result` is inserted as a JavaScript expression inside the JSX syntax. This means that it will be automatically escaped, preventing any scripts from being executed.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies to execute properly:\n\n- react\n\n## OWASP and CWE Resources\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "48c9b2af-e11b-3130-858c-51ccd08969c4",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of ReactJS, using `ref` attribute can potentially lead to XSS vulnerabilities if the reference is used to directly manipulate the DOM with untrusted user input. In the provided code snippet:\n\n```jsx\n<NotificationSystem ref={this.notificationSystem} />\n```\n\nIf `this.notificationSystem` is influenced by user input, it could lead to a potential XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate potential XSS vulnerabilities in ReactJS:\n\n1. Avoid using `ref` to directly manipulate the DOM with user input.\n2. Always sanitize user input, even if it is not directly inserted into the DOM.\n3. Use React's built-in protection against XSS. React escapes all variable content by default, so unless you're using `dangerouslySetInnerHTML` or manipulating the DOM with `ref`, you're protected.\n\n## Source Code Fix Recommendation\n\nAssuming `this.notificationSystem` is a callback function that is used to store a reference to the DOM node, you should ensure that it does not use any user-supplied input to manipulate the DOM. A safe usage of `ref` would look like this:\n\n```jsx\n<NotificationSystem ref={notificationSystem => this.notificationSystem = notificationSystem} />\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n- `react-dom`\n- `react-notification-system` (assuming `NotificationSystem` is a component from this library)\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "808c7564-10e9-3ed3-abb4-a9cdd1881ecd",
+              "name": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe vulnerability \"Direct Writing to Response Object from User Input May Lead to XSS Vulnerability\" refers to a situation where user input is directly written to the response object without proper sanitization or encoding. This can lead to Cross-Site Scripting (XSS) attacks, where an attacker can inject malicious scripts into web pages viewed by other users. These scripts can steal sensitive information, perform actions on behalf of the user, or exploit other vulnerabilities in the application.\n\nIn the provided JavaScript code, the `_.pick` function from the lodash library is used to select specific properties from the `user` object and send them as a response. If any of these properties contain user input that has not been properly sanitized, this could lead to an XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always sanitize and/or encode user input before including it in a response. This can be done using various libraries or built-in functions, depending on your specific technology stack.\n\nIn addition, you should also implement a Content Security Policy (CSP) to restrict the sources from which scripts can be loaded. This can help to prevent the execution of malicious scripts, even if they are included in the page.\n\n## Source Code Fix Recommendation\n\nA simple fix for this vulnerability would be to sanitize the user input before including it in the response. This can be done using the `escape` function from the lodash library:\n\n```javascript\nconst _ = require('lodash');\n\nreturn res.send(_.mapValues(_.pick(user, ['name', 'email', 'role', 'username', 'website', '_id', 'credit']), _.escape));\n```\n\n## Library Dependencies\n\nThe provided code example requires the following library dependencies:\n\n- Express.js (for the `res.send` function)\n- lodash (for the `_.pick` and `_.escape` functions)\n\n## OWASP and CWE Resources\n\n- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "37142a78-c416-306a-9708-4e0d996bef96",
+              "name": "Direct writing to Response object from user input may lead to XSS vulnerability; use 'resp.render()' for safe HTML escaping.",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) is a type of security vulnerability that enables attackers to inject malicious scripts into web pages viewed by other users. In JavaScript, a common way this can occur is when user input is directly written to the Response object without proper sanitization or escaping. This can lead to a variety of attacks, such as stealing user data, performing actions on behalf of the user, or even taking over the user's session.\n\nIn the provided code snippet, `res.send(user);`, the user input is directly sent to the response object without any form of sanitization or escaping. This means that if the user input contains malicious scripts, they will be executed when the response is rendered on the client side.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use the `resp.render()` function instead of `res.send()`. The `resp.render()` function automatically escapes HTML, which prevents any scripts from being executed. \n\n## Source Code Fix Recommendation\n\nHere is how you can fix the vulnerability in the provided code snippet:\n\n```javascript\n// Assuming Express.js is being used\nvar express = require('express');\nvar app = express();\n\napp.get('/', function(req, res){\n  var user = req.query.user;\n  res.render('index', { user: user });\n});\n```\n\nIn this code, `res.render('index', { user: user });` is used instead of `res.send(user);`. This ensures that the user input is properly escaped before it is sent to the client.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- Express.js\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "8adf429c-3d1b-39bb-895d-7d84e5d37424",
+              "name": "\"Dynamic Input Validation for Client-Side Redirects to Prevent Open Redirect Attacks\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\n\"Dynamic Input Validation for Client-Side Redirects to Prevent Open Redirect Attacks\" is a vulnerability that occurs when an application accepts untrusted input that could cause the web application to redirect the request to a URL contained within untrusted input. By modifying untrusted URL input to a malicious site, an attacker may successfully launch a phishing scam and steal user credentials. Because the server name in the modified link is identical to the original site, phishing attempts may have a more trustworthy appearance.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to avoid using user input to determine the destination of server-side redirects. If this is not possible, ensure that the supplied value is valid, appropriate for the application, and authorized for the user. It is also recommended to use a list of authorized URLs defined in a configuration file and force any redirects to come from that list.\n\n## Source Code Fix Recommendation\n\n```javascript\nlet allowedUrls = ['/profile/users', '/another/path', '/yet/another/path'];\n\nwindow.location = state && allowedUrls.includes(state.from.pathname) ? state.from.pathname : '/profile/users';\n```\n\nIn the above code, we have defined a list of allowed URLs and we only redirect to `state.from.pathname` if it is included in the list of allowed URLs. Otherwise, we redirect to '/profile/users'.\n\n## Library Dependencies\n\nThe provided code snippet does not require any additional library dependencies to execute properly.\n\n## OWASP Resources\n\n- [Unvalidated Redirects and Forwards Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-601: URL Redirection to Untrusted Site ('Open Redirect')](https://cwe.mitre.org/data/definitions/601.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-601",
+                    "url": "https://cwe.mitre.org/data/definitions/601.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-601"
+                ]
+              }
+            },
+            {
+              "id": "8a6ee9ea-bd21-39eb-a5ed-7bd15a2aee54",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of ReactJS, using `ref` attribute can potentially lead to XSS vulnerabilities if the reference is used to directly manipulate the DOM with untrusted user input. In the provided code snippet:\n\n```jsx\n<NotificationSystem ref={this.notificationSystem} />\n```\n\nIf `this.notificationSystem` is influenced by user input, it could lead to a potential XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate potential XSS vulnerabilities in ReactJS:\n\n1. Avoid using `ref` to directly manipulate the DOM with user input.\n2. Always sanitize user input, even if it is not directly inserted into the DOM.\n3. Use React's built-in protection against XSS. React escapes all variable content by default, so unless you're using `dangerouslySetInnerHTML` or manipulating the DOM with `ref`, you're protected.\n\n## Source Code Fix Recommendation\n\nAssuming `this.notificationSystem` is a callback function that is used to store a reference to the DOM node, you should ensure that it does not use any user-supplied input to manipulate the DOM. A safe usage of `ref` would look like this:\n\n```jsx\n<NotificationSystem ref={notificationSystem => this.notificationSystem = notificationSystem} />\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n- `react-dom`\n- `react-notification-system` (assuming `NotificationSystem` is a component from this library)\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "1231bad0-c035-34f8-867d-80f7d1306899",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of ReactJS, using `ref` attribute can potentially lead to XSS vulnerabilities if the reference is used to directly manipulate the DOM with untrusted user input. In the provided code snippet:\n\n```jsx\n<NotificationSystem ref={this.notificationSystem} />\n```\n\nIf `this.notificationSystem` is influenced by user input, it could lead to a potential XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate potential XSS vulnerabilities in ReactJS:\n\n1. Avoid using `ref` to directly manipulate the DOM with user input.\n2. Always sanitize user input, even if it is not directly inserted into the DOM.\n3. Use React's built-in protection against XSS. React escapes all variable content by default, so unless you're using `dangerouslySetInnerHTML` or manipulating the DOM with `ref`, you're protected.\n\n## Source Code Fix Recommendation\n\nAssuming `this.notificationSystem` is a callback function that is used to store a reference to the DOM node, you should ensure that it does not use any user-supplied input to manipulate the DOM. A safe usage of `ref` would look like this:\n\n```jsx\n<NotificationSystem ref={notificationSystem => this.notificationSystem = notificationSystem} />\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n- `react-dom`\n- `react-notification-system` (assuming `NotificationSystem` is a component from this library)\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "5553a41c-448b-36b5-96b9-59a37472fbf8",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of React, using `React.createRef()` can potentially lead to XSS vulnerabilities if the `ref` is improperly handled. This is because `ref` provides a way to access the properties of a DOM node directly, and if an attacker can control the value of `ref`, they can potentially inject malicious scripts.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using user-controlled input within your `ref` attributes. If this is not possible, you should properly sanitize and validate all user input to ensure it does not contain any malicious scripts.\n\n## Source Code Fix Recommendation\n\nInstead of using `React.createRef()`, consider using callback refs. Callback refs give more fine-grain control over the values, which can help prevent potential XSS attacks.\n\n```javascript\n// Before\nnotificationSystem = React.createRef();\n\n// After\nnotificationSystem = (element) => {\n  this.notificationSystem = element;\n};\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "e8e4147f-0ebf-3baf-8e30-8e4749dd468e",
+              "name": "\"Potential XSS Vulnerability from User-Controlled Data in HTML String\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nA potential Cross-Site Scripting (XSS) vulnerability can occur when user-controlled data is used in HTML strings. This can allow an attacker to inject malicious scripts into web pages viewed by other users. In the provided JavaScript code, the `author._id` is directly embedded into the HTML string which can be a potential source of XSS attacks if the `author._id` is user-controlled and not properly sanitized.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to properly sanitize and escape all user-controlled data before using it in HTML strings. This can be done by using built-in functions or libraries that can sanitize and escape special characters in the user-controlled data.\n\n## Source Code Fix Recommendation\n\nIn the provided code, you can use the `encodeURIComponent` function to sanitize the `author._id` before using it in the HTML string:\n\n```javascript\ncontent: author => (\n  <Link to={`/authors/${encodeURIComponent(author._id)}`}>\n      <button\n      className=\"btn btn-primary btn-sm\">Update</button>\n  </Link>\n)\n```\n\n## Library Dependencies\n\nThe provided code example requires the following library dependencies:\n\n- React\n- react-router-dom\n\n## References\n\n- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "249ee884-8db8-3a00-a8ff-6a7c84dea182",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of ReactJS, using `ref` attribute can potentially lead to XSS vulnerabilities if the reference is used to directly manipulate the DOM with untrusted user input. In the provided code snippet:\n\n```jsx\n<NotificationSystem ref={this.notificationSystem} />\n```\n\nIf `this.notificationSystem` is influenced by user input, it could lead to a potential XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate potential XSS vulnerabilities in ReactJS:\n\n1. Avoid using `ref` to directly manipulate the DOM with user input.\n2. Always sanitize user input, even if it is not directly inserted into the DOM.\n3. Use React's built-in protection against XSS. React escapes all variable content by default, so unless you're using `dangerouslySetInnerHTML` or manipulating the DOM with `ref`, you're protected.\n\n## Source Code Fix Recommendation\n\nAssuming `this.notificationSystem` is a callback function that is used to store a reference to the DOM node, you should ensure that it does not use any user-supplied input to manipulate the DOM. A safe usage of `ref` would look like this:\n\n```jsx\n<NotificationSystem ref={notificationSystem => this.notificationSystem = notificationSystem} />\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n- `react-dom`\n- `react-notification-system` (assuming `NotificationSystem` is a component from this library)\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "60f4b026-97cb-33c4-8b3d-c91a60600b10",
+              "name": "Potential Cross-Site Scripting (XSS) Vulnerability Detected in 'href' Attribute of Anchor Tag",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) is a type of security vulnerability that enables attackers to inject malicious scripts into web pages viewed by other users. A type of XSS vulnerability can occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript.\n\nIn the provided code snippet, the potential XSS vulnerability lies in the 'href' attribute of the anchor tag. If the `author._id` is not properly sanitized and is controlled by the user, it can lead to an XSS attack.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should:\n\n1. **Escape User Input**: Always escape user input to make sure that any characters that have a special meaning in HTML are escaped to their HTML entities.\n\n2. **Use Safe APIs**: Some APIs provide automatic escaping. For example, using `textContent` instead of `innerHTML` prevents from XSS because it automatically escapes the input.\n\n3. **Content Security Policy (CSP)**: Implementing CSP can effectively reduce the risk of XSS attacks by declaring which dynamic resources are allowed to load.\n\n## Source Code Fix Recommendation\n\nIn the provided code, you can use a library like `lodash` to escape the `author._id`:\n\n```javascript\nimport _ from 'lodash';\n\ncontent: author => (\n  <Link to={`/authors/${_.escape(author._id)}`}>\n      <button\n      className=\"btn btn-primary btn-sm\">Update</button>\n  </Link>\n)\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- react\n- react-router-dom\n- lodash\n\n## References\n\n- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "8d032145-536e-336f-b22a-beedd0d6bcc4",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of React, using `React.createRef()` can potentially lead to XSS vulnerabilities if the `ref` is improperly handled. This is because `ref` provides a way to access the properties of a DOM node directly, and if an attacker can control the value of `ref`, they can potentially inject malicious scripts.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using user-controlled input within your `ref` attributes. If this is not possible, you should properly sanitize and validate all user input to ensure it does not contain any malicious scripts.\n\n## Source Code Fix Recommendation\n\nInstead of using `React.createRef()`, consider using callback refs. Callback refs give more fine-grain control over the values, which can help prevent potential XSS attacks.\n\n```javascript\n// Before\nnotificationSystem = React.createRef();\n\n// After\nnotificationSystem = (element) => {\n  this.notificationSystem = element;\n};\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "d922f28e-809d-3e27-a4ce-63e239f2d092",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of React, using `React.createRef()` can potentially lead to XSS vulnerabilities if the `ref` is improperly handled. This is because `ref` provides a way to access the properties of a DOM node directly, and if an attacker can control the value of `ref`, they can potentially inject malicious scripts.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using user-controlled input within your `ref` attributes. If this is not possible, you should properly sanitize and validate all user input to ensure it does not contain any malicious scripts.\n\n## Source Code Fix Recommendation\n\nInstead of using `React.createRef()`, consider using callback refs. Callback refs give more fine-grain control over the values, which can help prevent potential XSS attacks.\n\n```javascript\n// Before\nnotificationSystem = React.createRef();\n\n// After\nnotificationSystem = (element) => {\n  this.notificationSystem = element;\n};\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "51e62264-3a7c-37fb-a4d9-055549262a5a",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of ReactJS, using `ref` attribute can potentially lead to XSS vulnerabilities if the reference is used to directly manipulate the DOM with untrusted user input. In the provided code snippet:\n\n```jsx\n<NotificationSystem ref={this.notificationSystem} />\n```\n\nIf `this.notificationSystem` is influenced by user input, it could lead to a potential XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate potential XSS vulnerabilities in ReactJS:\n\n1. Avoid using `ref` to directly manipulate the DOM with user input.\n2. Always sanitize user input, even if it is not directly inserted into the DOM.\n3. Use React's built-in protection against XSS. React escapes all variable content by default, so unless you're using `dangerouslySetInnerHTML` or manipulating the DOM with `ref`, you're protected.\n\n## Source Code Fix Recommendation\n\nAssuming `this.notificationSystem` is a callback function that is used to store a reference to the DOM node, you should ensure that it does not use any user-supplied input to manipulate the DOM. A safe usage of `ref` would look like this:\n\n```jsx\n<NotificationSystem ref={notificationSystem => this.notificationSystem = notificationSystem} />\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n- `react-dom`\n- `react-notification-system` (assuming `NotificationSystem` is a component from this library)\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "c7f108bd-a185-36ea-9331-e47af6e88aa2",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of ReactJS, using `ref` attribute can potentially lead to XSS vulnerabilities if the reference is used to directly manipulate the DOM with untrusted user input. In the provided code snippet:\n\n```jsx\n<NotificationSystem ref={this.notificationSystem} />\n```\n\nIf `this.notificationSystem` is influenced by user input, it could lead to a potential XSS vulnerability.\n\n## Mitigation Advice\n\nTo mitigate potential XSS vulnerabilities in ReactJS:\n\n1. Avoid using `ref` to directly manipulate the DOM with user input.\n2. Always sanitize user input, even if it is not directly inserted into the DOM.\n3. Use React's built-in protection against XSS. React escapes all variable content by default, so unless you're using `dangerouslySetInnerHTML` or manipulating the DOM with `ref`, you're protected.\n\n## Source Code Fix Recommendation\n\nAssuming `this.notificationSystem` is a callback function that is used to store a reference to the DOM node, you should ensure that it does not use any user-supplied input to manipulate the DOM. A safe usage of `ref` would look like this:\n\n```jsx\n<NotificationSystem ref={notificationSystem => this.notificationSystem = notificationSystem} />\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n- `react-dom`\n- `react-notification-system` (assuming `NotificationSystem` is a component from this library)\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            },
+            {
+              "id": "48cae64d-e074-3096-9fe8-ebab03804484",
+              "name": "\"Potential XSS Vulnerability Detected through `ref` Usage\"",
+              "helpUri": "https://www.glog.ai/",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nCross-Site Scripting (XSS) vulnerabilities occur when an application includes untrusted data in a new web page without proper validation or escaping, or updates an existing web page with user-supplied data using a browser API that can create HTML or JavaScript. XSS allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface web sites, or redirect the user to malicious sites.\n\nIn the context of React, using `React.createRef()` can potentially lead to XSS vulnerabilities if the `ref` is improperly handled. This is because `ref` provides a way to access the properties of a DOM node directly, and if an attacker can control the value of `ref`, they can potentially inject malicious scripts.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should avoid using user-controlled input within your `ref` attributes. If this is not possible, you should properly sanitize and validate all user input to ensure it does not contain any malicious scripts.\n\n## Source Code Fix Recommendation\n\nInstead of using `React.createRef()`, consider using callback refs. Callback refs give more fine-grain control over the values, which can help prevent potential XSS attacks.\n\n```javascript\n// Before\nnotificationSystem = React.createRef();\n\n// After\nnotificationSystem = (element) => {\n  this.notificationSystem = element;\n};\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `react`\n\n## References\n\n- [OWASP XSS (Cross Site Scripting) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "cwe": [
+                  {
+                    "id": "CWE-79",
+                    "url": "https://cwe.mitre.org/data/definitions/79.html"
+                  }
+                ],
+                "severity": "MEDIUM",
+                "kind": "FAIL",
+                "tags": [
+                  "CWE-79"
+                ]
+              }
+            }
+          ],
           "language": "en-US",
           "contents": [
             "localizedData",
@@ -20,7 +607,953 @@
         }
       },
       "language": "en-US",
-      "results": [],
+      "results": [
+        {
+          "ruleId": "b4517929-7da1-36fe-87b7-9bc6b65f6d74",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Missing CSRF Middleware in Express Application\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/index.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 7,
+                  "endLine": 5,
+                  "endColumn": 25,
+                  "snippet": {
+                    "text": "const appDev = express();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "ae92360ea4d731cafa79f6a0bf1963ca528716e36516df56a0127227aff6ca33",
+            "glog-pfp-ruleFileCode/v1": "697cf89afb7872278296b4c5925a7e8fad58631574536634f2c42d0e5069cdc6"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "697cf89afb7872278296b4c5925a7e8fad58631574536634f2c42d0e5069cdc6"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "979a782a-6de6-36e1-8af1-e1beefa50d27",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Undetected CSRF Middleware in Your Express Application\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/index.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 7,
+                  "endLine": 4,
+                  "endColumn": 22,
+                  "snippet": {
+                    "text": "const app = express();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "a91dc800df8a20f125adf70e18381f290247188812a1cd72ea2e6197d1500cd4",
+            "glog-pfp-ruleFileCode/v1": "f0e1c4d256d6313e2ce51ddafdc7b0d1e5a5183480216bc89f09a9a3855c7b91"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "f0e1c4d256d6313e2ce51ddafdc7b0d1e5a5183480216bc89f09a9a3855c7b91"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "50de0c4a-ce50-3a44-93b0-a9a17b26ca93",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/about.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 26,
+                  "endLine": 6,
+                  "endColumn": 43,
+                  "snippet": {
+                    "text": "    notificationSystem = React.createRef();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "d35200746e867aed3c0ae4b44b1e6290c56184394b0a163527d4c21581157e95",
+            "glog-pfp-ruleFileCode/v1": "1877658d81c2aa43c9e35679228aab2e94da33007bd4dc0540daa0924e8b5ea5"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "1877658d81c2aa43c9e35679228aab2e94da33007bd4dc0540daa0924e8b5ea5"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "1736b4b2-27a1-3781-a71d-bf219e7c3cfb",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/authors.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 14,
+                  "endLine": 15,
+                  "endColumn": 20,
+                  "snippet": {
+                    "text": "    res.send(author);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "b40ce3cc1143227df36577d1160a0094012a5c06d785a5d999c715526597fd43",
+            "glog-pfp-ruleFileCode/v1": "980aa058b5f1378d39355f2790ea8d48f2d59fff7d6e7f635b26779e681df467"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "980aa058b5f1378d39355f2790ea8d48f2d59fff7d6e7f635b26779e681df467"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "b929b2fb-6bb7-3248-b9a3-25d5dd534f06",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Bcrypt Hash Vulnerability Detected"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/migrations/20230820171849-users.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 22,
+                  "endLine": 9,
+                  "endColumn": 82,
+                  "snippet": {
+                    "text": "        \"password\": \"$2b$10$TsOxUC1qsmh5CbPv0OaEzeunm2HQCiwzdfMJz4G1l4D0.MG/L3Hji\","
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "1261bd62fd999dbf1828069e9e1a1ab344c17ec20599ef7822974e4f7ac17c11",
+            "glog-pfp-ruleFileCode/v1": "0b9196413b0c103b3f5350fef640ab051a53a59dba3e11df64836d5b26b7c08d"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "0b9196413b0c103b3f5350fef640ab051a53a59dba3e11df64836d5b26b7c08d"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "541ab5e1-7efc-39c7-b4e3-3f03c78d7961",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability; Use 'resp.render()' for Safe HTML Escaping"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/books.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 14,
+                  "endLine": 13,
+                  "endColumn": 18,
+                  "snippet": {
+                    "text": "    res.send(book);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "41a86fd7fc81605c45e4c60885d4d3f3c515d85c8ad4f82d9cf75312843bdef4",
+            "glog-pfp-ruleFileCode/v1": "bf869fd8fdc170bc777fdf2a6e170247724d4824414b9e32e446c5fe030b956f"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "bf869fd8fdc170bc777fdf2a6e170247724d4824414b9e32e446c5fe030b956f"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "d2a29cb0-2ef9-31ed-b161-dca57fb84f94",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"HTML Coding Risks XSS Attack Exposure\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/about.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 67,
+                  "startColumn": 29,
+                  "endLine": 67,
+                  "endColumn": 139,
+                  "snippet": {
+                    "text": "                            <p className='lead' dangerouslySetInnerHTML={{__html: `Thank you ${this.state.result} for subscribing!`}}></p>"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "7f16520545784ff581282b11fe2b25a59513027e87968068a147af0266681413",
+            "glog-pfp-ruleFileCode/v1": "449b7710774427e861c7fde919836154b97c46752c3bc96b2af4ad65f669a35e"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "449b7710774427e861c7fde919836154b97c46752c3bc96b2af4ad65f669a35e"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "bec164a1-1bdf-3733-a505-ccfe571c5cd1",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Avoid Spreading JSX Attributes to Prevent Unintentional Prop Passing and Invalid HTML Warnings\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/App.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 58,
+                  "startColumn": 57,
+                  "endLine": 58,
+                  "endColumn": 100,
+                  "snippet": {
+                    "text": "            <Route path=\"/books\" exact render={props => <Books {...props} user={this.state.user} />}/>"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "1776b617d679a081fe3e8d60628eab6670d2481bcd348dd25985edb0e18fe5cf",
+            "glog-pfp-ruleFileCode/v1": "340b2b117d9f214c93c4530c0bf3870cd9cba7f0502740a9d38a5eaa2ee90bf9"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "340b2b117d9f214c93c4530c0bf3870cd9cba7f0502740a9d38a5eaa2ee90bf9"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "480c84b3-1aea-33a9-83f3-ecc3f52dc9ec",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability; Use 'resp.render()' for Safe HTML Escaping"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/books.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 14,
+                  "endLine": 32,
+                  "endColumn": 18,
+                  "snippet": {
+                    "text": "    res.send(book);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "aaa17d966061272f3130262da0f4ef4f041d5f581a628b9c7db9c4c2b99ec92a",
+            "glog-pfp-ruleFileCode/v1": "d1ee34564c49e75c426c9ff16ff4195fe6d7934375e25a974e6d934b0f8af205"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "d1ee34564c49e75c426c9ff16ff4195fe6d7934375e25a974e6d934b0f8af205"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "7f366b51-0f8b-31b5-85f8-f2eb61e85fde",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/authors.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 14,
+                  "endLine": 44,
+                  "endColumn": 20,
+                  "snippet": {
+                    "text": "    res.send(author);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "37680b6adffd1a236af408f7c9bb370d5e260dc0576133579b82d038f2340ce9",
+            "glog-pfp-ruleFileCode/v1": "2a0ea15e4c533c33c48df2c681f3df8e560dcbd29efc23549d239451d76cb2bb"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "2a0ea15e4c533c33c48df2c681f3df8e560dcbd29efc23549d239451d76cb2bb"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "ed836ef6-5b3a-3093-870f-c817cf9fa42b",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability; Use 'resp.render()' for Safe HTML Escaping"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/books.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 14,
+                  "endLine": 39,
+                  "endColumn": 18,
+                  "snippet": {
+                    "text": "    res.send(book);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "6e0ab574645c56be335b9d9142ab3e685f1d2df2355f7f36a5b42e51be79d24e",
+            "glog-pfp-ruleFileCode/v1": "18ee364c9fa67104589b0c20d13fccd9b7a5798d197dc67cc57c56a7bbaf058a"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "18ee364c9fa67104589b0c20d13fccd9b7a5798d197dc67cc57c56a7bbaf058a"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "a7dfeb7d-ce6e-3faa-8f10-06a20981671a",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/admin.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 24,
+                  "endLine": 8,
+                  "endColumn": 41,
+                  "snippet": {
+                    "text": "  notificationSystem = React.createRef();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "baf1750c80d3d308a733622a5ace6ac95803171719be2be4cff50417b2645284",
+            "glog-pfp-ruleFileCode/v1": "f985397ace096aba4def29307d9b82f1a035e25c3ec43eb74183310ca73ce41f"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "f985397ace096aba4def29307d9b82f1a035e25c3ec43eb74183310ca73ce41f"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "48c9b2af-e11b-3130-858c-51ccd08969c4",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/about.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 17,
+                  "endLine": 70,
+                  "endColumn": 69,
+                  "snippet": {
+                    "text": "                <NotificationSystem ref={this.notificationSystem} />"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "77bc2ad0096c08f4c63ca630e6392458e72cb616053ae27a970bc097d6ddbd38",
+            "glog-pfp-ruleFileCode/v1": "0be2d969ce15e8dd77b7daed120d5a959b1e2e0b33e7dfbe30b2dc57222b4d59"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "0be2d969ce15e8dd77b7daed120d5a959b1e2e0b33e7dfbe30b2dc57222b4d59"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "808c7564-10e9-3ed3-abb4-a9cdd1881ecd",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct Writing to Response Object from User Input May Lead to XSS Vulnerability"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/users.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 25,
+                  "endLine": 23,
+                  "endColumn": 104,
+                  "snippet": {
+                    "text": "        return res.send(_.pick(user, ['name', 'email', 'role', 'username', 'website', '_id', 'credit']));"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "1b05b07e75672ffc94b9151034ab11ccb6bb36c1152d72a4d2c2bee5ab4c0213",
+            "glog-pfp-ruleFileCode/v1": "0122044705e1a6852b603bdedc5e421dad4776527873da1f0ec61497333ff0a3"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "0122044705e1a6852b603bdedc5e421dad4776527873da1f0ec61497333ff0a3"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "37142a78-c416-306a-9708-4e0d996bef96",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Direct writing to Response object from user input may lead to XSS vulnerability; use 'resp.render()' for safe HTML escaping."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "server/routes/users.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 14,
+                  "endLine": 43,
+                  "endColumn": 18,
+                  "snippet": {
+                    "text": "    res.send(user);"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "58d7620fc8209f49b9069de15985386c20356c314e498aea202591012a68a41b",
+            "glog-pfp-ruleFileCode/v1": "bb00c14e8a88d33be0569176ce263adbe3a5f3ecf1e2d8719ef6a3f8734ed80c"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "bb00c14e8a88d33be0569176ce263adbe3a5f3ecf1e2d8719ef6a3f8734ed80c"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "8adf429c-3d1b-39bb-895d-7d84e5d37424",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Dynamic Input Validation for Client-Side Redirects to Prevent Open Redirect Attacks\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/admin.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 37,
+                  "startColumn": 9,
+                  "endLine": 37,
+                  "endColumn": 73,
+                  "snippet": {
+                    "text": "        window.location = state ? state.from.pathname : '/profile/users';"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "a8c36b1701398460953519bfa05d8a2bc3c289059e5da08434bc63e1a1dfd74a",
+            "glog-pfp-ruleFileCode/v1": "16af646108e4c0d9e47342878083d9d65a4a07b73805474082fe0046e730896f"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "16af646108e4c0d9e47342878083d9d65a4a07b73805474082fe0046e730896f"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "8a6ee9ea-bd21-39eb-a5ed-7bd15a2aee54",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/admin.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 61,
+                  "startColumn": 9,
+                  "endLine": 61,
+                  "endColumn": 61,
+                  "snippet": {
+                    "text": "        <NotificationSystem ref={this.notificationSystem} />"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "541961091fb56de5d3185a61788e64224bb6544910f4a9b3ceb5b305a7be49d9",
+            "glog-pfp-ruleFileCode/v1": "57784a762d8c59ef18315269de8246e358a73bad35adece629f8176a69ae1b2d"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "57784a762d8c59ef18315269de8246e358a73bad35adece629f8176a69ae1b2d"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "5553a41c-448b-36b5-96b9-59a37472fbf8",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/authors.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 24,
+                  "endLine": 12,
+                  "endColumn": 41,
+                  "snippet": {
+                    "text": "  notificationSystem = React.createRef();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "8c343972925bffe8dbdc7f9c81b26f35f2f3fc3cddabdbc631f979bc3c9af4af",
+            "glog-pfp-ruleFileCode/v1": "2c87d69322308d40e6d944b066289c7e146b45f8575a55c211f34fea338e149e"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "2c87d69322308d40e6d944b066289c7e146b45f8575a55c211f34fea338e149e"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "60f4b026-97cb-33c4-8b3d-c91a60600b10",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Potential Cross-Site Scripting (XSS) Vulnerability Detected in 'href' Attribute of Anchor Tag"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/authors.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 24,
+                  "endLine": 29,
+                  "endColumn": 4,
+                  "snippet": {
+                    "text": "    content: author => (\n      <Link to={`/authors/${author._id}`}>\n          <button\n          className=\"btn btn-primary btn-sm\">Update</button>\n      </Link>\n\n  )"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "227ef9ce53e4a446b00ab9f3a33f51eb4a05be9f08098cb3b29718987c1c0844",
+            "glog-pfp-ruleFileCode/v1": "aa50cd9865ec8528d55a5452f72a990c3a3b0285c891a53d158ae4e387985196"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "aa50cd9865ec8528d55a5452f72a990c3a3b0285c891a53d158ae4e387985196"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "e8e4147f-0ebf-3baf-8e30-8e4749dd468e",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability from User-Controlled Data in HTML String\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/authors.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 21,
+                  "endLine": 29,
+                  "endColumn": 4,
+                  "snippet": {
+                    "text": "    content: author => (\n      <Link to={`/authors/${author._id}`}>\n          <button\n          className=\"btn btn-primary btn-sm\">Update</button>\n      </Link>\n\n  )"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "eb7d760c224800f08413003bb8416a640f9ee2cc3cb44f34416613d4a6ee8a8d",
+            "glog-pfp-ruleFileCode/v1": "014f00a78b52fb61816fff6db6630b257ab3123bae6527aac3479ab4731b62aa"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "014f00a78b52fb61816fff6db6630b257ab3123bae6527aac3479ab4731b62aa"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "1231bad0-c035-34f8-867d-80f7d1306899",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/authors.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 133,
+                  "startColumn": 7,
+                  "endLine": 133,
+                  "endColumn": 59,
+                  "snippet": {
+                    "text": "      <NotificationSystem ref={this.notificationSystem} />"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "6313b9f8e16ad741bcc1bb0ee4b55e16030fa1fbf4264497ce5489a0cf3f54c3",
+            "glog-pfp-ruleFileCode/v1": "fc563b557730978200994fa8326311aa8548cb0e5348b843809bf61afa720ced"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "fc563b557730978200994fa8326311aa8548cb0e5348b843809bf61afa720ced"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "249ee884-8db8-3a00-a8ff-6a7c84dea182",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/bookForm.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 15,
+                  "endLine": 70,
+                  "endColumn": 67,
+                  "snippet": {
+                    "text": "              <NotificationSystem ref={this.notificationSystem} />"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "e630d0371a8f5976f807956e0ec1090dfec352a78267da597c2d710cbf51cb28",
+            "glog-pfp-ruleFileCode/v1": "b0dcc84c94cdccba0d5f5b57c9d1006dd0e12c0e3b27f5a41d8a4ccc4de7465b"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "b0dcc84c94cdccba0d5f5b57c9d1006dd0e12c0e3b27f5a41d8a4ccc4de7465b"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "d922f28e-809d-3e27-a4ce-63e239f2d092",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/books.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 24,
+                  "endLine": 12,
+                  "endColumn": 41,
+                  "snippet": {
+                    "text": "  notificationSystem = React.createRef();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "161b6fe1cc92d19ccbe87971ea0d3d1c24bb73d8d445a39c9f2af279553120c6",
+            "glog-pfp-ruleFileCode/v1": "1e446029471243a1b2b8992a509191cc4444db5eadaaaceca3a0eea7926f0641"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "1e446029471243a1b2b8992a509191cc4444db5eadaaaceca3a0eea7926f0641"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "51e62264-3a7c-37fb-a4d9-055549262a5a",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/books.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 111,
+                  "startColumn": 11,
+                  "endLine": 111,
+                  "endColumn": 63,
+                  "snippet": {
+                    "text": "          <NotificationSystem ref={this.notificationSystem} />"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "c71d2b7b836597e7eb5c4fb1fa38ba31e3808b45c0c3aa7032633ac98f7ed41b",
+            "glog-pfp-ruleFileCode/v1": "306e312143ebbc76d2e9a1a1de4efec97142c2cc3061b2c5811101c8b986000d"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "306e312143ebbc76d2e9a1a1de4efec97142c2cc3061b2c5811101c8b986000d"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "8d032145-536e-336f-b22a-beedd0d6bcc4",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/bookForm.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 26,
+                  "endLine": 10,
+                  "endColumn": 43,
+                  "snippet": {
+                    "text": "    notificationSystem = React.createRef();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "26b9ff43d57f8688e1b3502c4adc21e47d12532cb1135a7ed473bf339a38163b",
+            "glog-pfp-ruleFileCode/v1": "11e037db97743d2bb2b2bb4dbe5894c49f4b52dabfa7411c0a4c01ed47e25fb4"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "11e037db97743d2bb2b2bb4dbe5894c49f4b52dabfa7411c0a4c01ed47e25fb4"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "48cae64d-e074-3096-9fe8-ebab03804484",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/changePasswordForm.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 24,
+                  "endLine": 10,
+                  "endColumn": 41,
+                  "snippet": {
+                    "text": "  notificationSystem = React.createRef();"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "d2403b5664c21eaf49ac235d693d8961cf019d404817963c9751f764a3f87cbb",
+            "glog-pfp-ruleFileCode/v1": "3e27fd51bd06feb8bfdf85747c6992b51ba022f19f08a65e39c1352b21c721a1"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "3e27fd51bd06feb8bfdf85747c6992b51ba022f19f08a65e39c1352b21c721a1"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "c7f108bd-a185-36ea-9331-e47af6e88aa2",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "\"Potential XSS Vulnerability Detected through `ref` Usage\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "client/src/components/changePasswordForm.jsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 65,
+                  "startColumn": 13,
+                  "endLine": 65,
+                  "endColumn": 65,
+                  "snippet": {
+                    "text": "            <NotificationSystem ref={this.notificationSystem} />"
+                  }
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "glog-pfp-ruleFileLineCode/v1": "37ccab126f2abd78d88e88ab666fedae82d0a6ad916d7e9d32aac13da831a053",
+            "glog-pfp-ruleFileCode/v1": "bf096e35603a1f47c5ba70ac8b81c7f522dce87957d254e2d36ed0fe0377c3d7"
+          },
+          "fingerprints": {
+            "glog-fp-ruleFileCode/v1": "bf096e35603a1f47c5ba70ac8b81c7f522dce87957d254e2d36ed0fe0377c3d7"
+          },
+          "properties": {}
+        }
+      ],
       "newlineSequences": [
         "\r\n",
         "\n"
